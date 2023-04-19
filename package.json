@@ -1,0 +1,37 @@
+{
+  "name": "iot-nervous-system-ai",
+  "version": "1.0.0",
+  "description": "Node of the Iot Nervous System which implement a Q Learning algorithm to learn and take decision for the environment",
+  "main": "app/index.js",
+  "scripts": {
+    "test": "ENV=test ava -s",
+    "test:ci": "ENV=test c8 ava -s -v",
+    "dev": "nodemon --watch app --watch db --delay 2.5 -e js,graphql --ignore '**.test.js' app/index"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/querzola-unibo/iot-nervous-system-ai.git"
+  },
+  "keywords": [
+    "AI",
+    "Q",
+    "Learning",
+    "MQTT"
+  ],
+  "author": "Emanuele Querzola",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/querzola-unibo/iot-nervous-system-ai/issues"
+  },
+  "homepage": "https://github.com/querzola-unibo/iot-nervous-system-ai#readme",
+  "dependencies": {
+    "mongodb": "^5.1.0",
+    "mqtt": "^4.3.7",
+    "ws": "^8.13.0"
+  },
+  "devDependencies": {
+    "c8": "^7.13.0",
+    "ava": "^5.2.0",
+    "nodemon": "^2.0.21"
+  }
+}
