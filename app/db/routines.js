@@ -2,11 +2,11 @@ const { collection } = require('.')
 
 const Routines = collection('routines')
 
-export const create = async ({ name, description, room }) => {
-  return Routines.insertOne({ name, description, room })
+const create = async ({ name, description, roomId }) => {
+  return Routines.insertOne({ name, description, roomId })
 }
 
-export const update = async ({ _id, ...fieldsToUpdate }) => {
+const update = async ({ _id, ...fieldsToUpdate }) => {
   return Routines.findOneAndUpdate(
     { _id },
     { $set: fieldsToUpdate },
@@ -14,11 +14,11 @@ export const update = async ({ _id, ...fieldsToUpdate }) => {
   )
 }
 
-export const remove = async ({ _id }) => {
+const remove = async ({ _id }) => {
   return Routines.deleteOne({ _id })
 }
 
-export const get = async ({ query }) => {
+const get = async ({ query } = {}) => {
   const queryOnRoutines = {}
 
   if (query) {
@@ -28,4 +28,11 @@ export const get = async ({ query }) => {
   }
 
   return Routines.find(queryOnRoutines).toArray()
+}
+
+module.exports = {
+  get,
+  create,
+  update,
+  remove
 }

@@ -1,8 +1,6 @@
 const mqtt = require('mqtt')
-const { collection } = require('./db')
 const { MQTT_BROKER_URL, MQTT_ROOT_TOPIC } = require('./utils/costants')
-
-const graph = collection('graph')
+const routes = require('./routes')
 
 const client = mqtt.connect(MQTT_BROKER_URL)
 
@@ -15,9 +13,23 @@ client.on('connect', connack => {
 })
 
 client.on('message', async (topic, payload, packet) => {
-  console.log({ topic, payload, packet })
-  if (topic === '') {
-    await graph.insertOne({ name: 'spot', kind: 'dog' })
+  const topicLevels = topic.replace(`${MQTT_ROOT_TOPIC}/`, '').split('/')
+
+  let route = routes
+  try {
+    topicLevels.forEach(topicLevel => {
+      route = route[topicLevel]
+    })
+  } catch (e) {
+    console.error(`WARNING: No routes for topic: ${topic}`)
+  }
+
+  if (typeof route === 'function') {
+    try {
+      await route(JSON.parse(payload.toString()), client)
+    } catch (e) {
+      console.error(`ERROR: ${e}`)
+    }
   }
 })
 
@@ -26,6 +38,6 @@ client.on('error', error => {
 })
 
 setInterval(async function () {
-  const result = await graph.findOne({})
-  console.log(result)
+  // const result = await graph.findOne({})
+  // console.log(result)
 }, 5000)
