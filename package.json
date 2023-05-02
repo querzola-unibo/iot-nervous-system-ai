@@ -25,13 +25,14 @@
   },
   "homepage": "https://github.com/querzola-unibo/iot-nervous-system-ai#readme",
   "dependencies": {
+    "crypto": "^1.0.1",
     "mongodb": "^5.1.0",
     "mqtt": "^4.3.7",
     "ws": "^8.13.0"
   },
   "devDependencies": {
-    "c8": "^7.13.0",
     "ava": "^5.2.0",
+    "c8": "^7.13.0",
     "nodemon": "^2.0.21"
   }
 }

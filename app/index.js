@@ -1,15 +1,19 @@
 const mqtt = require('mqtt')
-const { MQTT_BROKER_URL, MQTT_ROOT_TOPIC } = require('./utils/costants')
+const { MQTT_BROKER_URL, MQTT_ROOT_TOPIC, SUBSCRIBED_TOPICS } = require('./utils/costants')
 const routes = require('./routes')
+
+const { createIdFromObject } = require('./utils/ids')
+const { getRooms, getDevices} = require('./status')
 
 const client = mqtt.connect(MQTT_BROKER_URL)
 
 client.on('connect', connack => {
-  client.subscribe(`${MQTT_ROOT_TOPIC}/#`, { qos: 0 }, (err, granted) => {
+  SUBSCRIBED_TOPICS.forEach((topic) => client.subscribe(`${MQTT_ROOT_TOPIC}/${topic}`, { qos: 0 }, (err, granted) => {
     if (err) {
-      console.err(err)
+      console.err(`ERROR: failded to subscribe to topics: ${topics}`)
+      console.error(err)
     }
-  })
+  }))
 })
 
 client.on('message', async (topic, payload, packet) => {
@@ -18,6 +22,10 @@ client.on('message', async (topic, payload, packet) => {
   let route = routes
   try {
     topicLevels.forEach(topicLevel => {
+      if(!route[topicLevel]) {
+        throw new Error()
+      }
+
       route = route[topicLevel]
     })
   } catch (e) {
@@ -38,6 +46,16 @@ client.on('error', error => {
 })
 
 setInterval(async function () {
-  // const result = await graph.findOne({})
-  // console.log(result)
+  const status = {
+    rooms: getRooms(), 
+    devices: getDevices()
+  }
+console.log({
+  _id: createIdFromObject(status), 
+  status
+})
+  client.publish(`${MQTT_ROOT_TOPIC}/status`, JSON.stringify({
+    _id: createIdFromObject(status), 
+    status
+  }))
 }, 5000)

@@ -3,7 +3,7 @@ const rooms = require('./rooms')
 const devices = require('./devices')
 
 module.exports = {
-  // ...routines,
+  //...routines,
   ...rooms,
   ...devices
 }

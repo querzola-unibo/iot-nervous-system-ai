@@ -1,5 +1,5 @@
 const { create, update, remove, get } = require('../db/rooms')
-const { createRoom, updateRoom, deleteRoom } = require('../states')
+const { createRoom, updateRoom, deleteRoom } = require('../status')
 
 const { MQTT_ROOT_TOPIC } = require('../utils/costants')
 

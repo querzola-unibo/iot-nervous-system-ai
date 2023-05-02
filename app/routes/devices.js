@@ -1,5 +1,5 @@
 const { create, update, remove, get } = require('../db/devices')
-const { createDevice, updateDevice, deleteDevice } = require('../states')
+const { createDevice, updateDevice, deleteDevice } = require('../status')
 
 const { MQTT_ROOT_TOPIC } = require('../utils/costants')
 
