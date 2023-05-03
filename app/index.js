@@ -3,12 +3,16 @@ const { MQTT_BROKER_URL, MQTT_ROOT_TOPIC, SUBSCRIBED_TOPICS } = require('./utils
 const routes = require('./routes')
 
 const { createIdFromObject } = require('./utils/ids')
-const { getRooms, getDevices} = require('./status')
+const { getRooms, getDevices, initStatus } = require('./status')
+
+initStatus()
 
 const client = mqtt.connect(MQTT_BROKER_URL)
 
+
 client.on('connect', connack => {
-  SUBSCRIBED_TOPICS.forEach((topic) => client.subscribe(`${MQTT_ROOT_TOPIC}/${topic}`, { qos: 0 }, (err, granted) => {
+  console.log('Succesfully connected to MQTT broker!')
+  SUBSCRIBED_TOPICS.forEach((topic) => client.subscribe(`${MQTT_ROOT_TOPIC}/${topic}/#`, { qos: 0 }, (err, granted) => {
     if (err) {
       console.err(`ERROR: failded to subscribe to topics: ${topics}`)
       console.error(err)
@@ -50,10 +54,7 @@ setInterval(async function () {
     rooms: getRooms(), 
     devices: getDevices()
   }
-console.log({
-  _id: createIdFromObject(status), 
-  status
-})
+
   client.publish(`${MQTT_ROOT_TOPIC}/status`, JSON.stringify({
     _id: createIdFromObject(status), 
     status

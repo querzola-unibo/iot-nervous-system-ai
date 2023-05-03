@@ -1,6 +1,10 @@
-const { ROOM_TYPES } = require('../db/rooms')
+const rooms = require('../db/rooms')
+const { getInitialStatus }  = require('./utils')
 
 const ROOMS = {}
+
+const initRooms = async () => await getInitialStatus(rooms, ROOMS)
+
 
 const getRooms = ({ ids = [], query, type, floor } = {}) => {
   return Object.keys(ROOMS)
@@ -47,7 +51,7 @@ const createRoom = ({ id, name, type, floor = 0, devices = [] }) => {
     throw new Error('Room must have a type')
   }
 
-  if (!Object.values(ROOM_TYPES).includes(type)) {
+  if (!Object.keys(rooms.ROOM_TYPES).includes(type)) {
     throw new Error('Room type is invalid')
   }
 
@@ -78,7 +82,7 @@ const updateRoom = ({
   }
 
   if (type) {
-    if (!Object.values(ROOM_TYPES).includes(type)) {
+    if (!Object.values(rooms.ROOM_TYPES).includes(type)) {
       throw new Error('Room type is invalid')
     }
 
@@ -113,6 +117,7 @@ const updateRoom = ({
 const deleteRoom = id => delete ROOMS[id]
 
 module.exports = {
+  initRooms,
   getRooms,
   getRoom,
   createRoom,
