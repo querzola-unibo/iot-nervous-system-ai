@@ -2,6 +2,7 @@ const { DEVICE_TYPES, ELEMENTS } = require('../db/devices')
 const { getRoom } = require('./rooms')
 
 const DEVICES = {}
+const UNAUTHORIZED_DEVICES = []
 
 const getDevices = ({ ids = [], query, roomIds = [], type, element } = {}) => {
   return Object.keys(DEVICES)
@@ -34,13 +35,17 @@ const getDevices = ({ ids = [], query, roomIds = [], type, element } = {}) => {
 
 const getDevice = id => DEVICES[id]
 
-const createDevice = ({ id, name, roomId, type, element }) => {
+const createDevice = ({ id, name, roomId, type, element, deviceId }) => {
   if (!id) {
     throw new Error('Device must have an id')
   }
 
   if (DEVICES[id]) {
     throw new Error('Device id already in use')
+  }
+
+  if(!deviceId) {
+    throw new Error('Device must have a deviceId')
   }
 
   if (!name) {
@@ -63,7 +68,7 @@ const createDevice = ({ id, name, roomId, type, element }) => {
     throw new Error('Device room not exists')
   }
 
-  DEVICES[id] = { name, type, roomId, element }
+  DEVICES[id] = { name, type, roomId, element, deviceId }
 }
 
 const updateDevice = ({
@@ -72,6 +77,7 @@ const updateDevice = ({
   roomId,
   type,
   element,
+  deviceId,
   params = {},
   stats = {}
 } = {}) => {
@@ -87,6 +93,10 @@ const updateDevice = ({
 
   if (name) {
     updatedDevice.name = name
+  }
+
+  if (deviceId) {
+    updatedDevice.deviceId = deviceId
   }
 
   if (type) {
@@ -132,10 +142,29 @@ const updateDevice = ({
 
 const deleteDevice = id => delete DEVICES[id]
 
+const getAunothorizedDevices = () => UNAUTHORIZED_DEVICES
+
+const addAunothorizedDevice = (id) => {
+  if(UNAUTHORIZED_DEVICES.indexOf(id) < 0) { 
+    UNAUTHORIZED_DEVICES.push(id) 
+  }
+}
+
+const deleteAunothorizedDevice = (id) => {
+  const index = UNAUTHORIZED_DEVICES.indexOf(id) 
+
+  if(index >= 0) {
+    UNAUTHORIZED_DEVICES.splice(index,1)
+  }
+}
+
 module.exports = {
   getDevices,
   getDevice,
   createDevice,
   updateDevice,
-  deleteDevice
+  deleteDevice,
+  getAunothorizedDevices,
+  addAunothorizedDevice,
+  deleteAunothorizedDevice
 }

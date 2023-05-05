@@ -1,38 +1,34 @@
 const { create, update, remove, get } = require('../db/devices')
-const { createDevice, updateDevice, deleteDevice } = require('../status')
+const { createDevice, updateDevice, deleteDevice, getDevice, addAunothorizedDevice, deleteAunothorizedDevice } = require('../status')
 
 const { MQTT_ROOT_TOPIC } = require('../utils/costants')
 
 const topic = `${MQTT_ROOT_TOPIC}/devices`
 
 module.exports = {
-  create: async (data, client) => {
-    const routine = await create(data)
-    if (routine?.insertedId) {
-      createDevice({ _id: routine.insertedId.toString(), ...data })
-      const routines = await get()
-
-      client.publish(topic, JSON.stringify(routines))
+  connect: async (data) => {
+    if(!getDevice(data.id)){
+      await addAunothorizedDevice(data.id)
     }
   },
-  update: async (data, client) => {
-    const routine = await update(data)
-    if (routine?.insertedId) {
-      updateDevice({ _id: routine.insertedId.toString(), ...data })
+  create: async (data) => {
+    const device = await create(data)
+    deleteAunothorizedDevice(data.deviceId)
 
-      const routines = await get()
-
-      client.publish(topic, JSON.stringify(routines))
+    if (device?.insertedId) {
+      createDevice({ _id: device.insertedId.toString(), ...data }) 
+    }
+  },
+  update: async (data) => {
+    const device = await update(data)
+    if (device?.insertedId) {
+      updateDevice({ _id: device.insertedId.toString(), ...data })
     }
   },
   remove: async (data, client) => {
-    const routine = await remove(data)
-    if (routine?.deletedCount) {
+    const device = await remove(data)
+    if (device?.deletedCount) {
       deleteDevice(data._id)
-
-      const routines = await get()
-
-      client.publish(topic, JSON.stringify(routines))
     }
   }
 }
