@@ -40,7 +40,7 @@ client.on('message', async (topic, payload, packet) => {
     try {
       await route(JSON.parse(payload.toString()), client)
     } catch (e) {
-      console.error(`ERROR: ${e}`)
+      console.error(`ERROR:\nOn topic:${topic}\nMessage:${e}`)
     }
   }
 })

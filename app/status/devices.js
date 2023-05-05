@@ -56,11 +56,11 @@ const createDevice = ({ id, name, roomId, type, element, deviceId }) => {
     throw new Error('Device must have a type')
   }
 
-  if (!Object.values(DEVICE_TYPES).includes(type)) {
+  if (!Object.keys(DEVICE_TYPES).includes(type)) {
     throw new Error('Device type is invalid')
   }
 
-  if (!Object.values(ELEMENTS).includes(element)) {
+  if (!Object.keys(ELEMENTS).includes(element)) {
     throw new Error('Device element is invalid')
   }
 
@@ -100,7 +100,7 @@ const updateDevice = ({
   }
 
   if (type) {
-    if (!Object.values(DEVICE_TYPES).includes(type)) {
+    if (!Object.keys(DEVICE_TYPES).includes(type)) {
       throw new Error('Device type is invalid')
     }
 
@@ -108,7 +108,7 @@ const updateDevice = ({
   }
 
   if (element) {
-    if (!Object.values(ELEMENTS).includes(element)) {
+    if (!Object.keys(ELEMENTS).includes(element)) {
       throw new Error('Device element is invalid')
     }
 

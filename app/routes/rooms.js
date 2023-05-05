@@ -17,7 +17,7 @@ module.exports = {
   update: async (data, client) => {
     const room = await update(data)
     if (room?.insertedId) {
-      updateRoom({ _id: room.insertedId.toString(), ...data })
+      updateRoom({ id: room.insertedId.toString(), ...data })
 
       const rooms = await get()
 
@@ -27,7 +27,7 @@ module.exports = {
   remove: async (data, client) => {
     const room = await remove(data)
     if (room?.deletedCount) {
-      deleteRoom(data._id)
+      deleteRoom(data.id)
 
       const rooms = await get()
 
