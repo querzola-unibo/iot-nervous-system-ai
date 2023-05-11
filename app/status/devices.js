@@ -2,7 +2,7 @@ const { DEVICE_TYPES, ELEMENTS } = require('../db/devices')
 const { getRoom } = require('./rooms')
 
 const DEVICES = {}
-const UNAUTHORIZED_DEVICES = []
+const UNAUTHORIZED_DEVICES = {}
 
 const getDevices = ({ ids = [], query, roomIds = [], type, element } = {}) => {
   return Object.keys(DEVICES)
@@ -35,7 +35,18 @@ const getDevices = ({ ids = [], query, roomIds = [], type, element } = {}) => {
 
 const getDevice = id => DEVICES[id]
 
-const createDevice = ({ id, name, roomId, type, element, deviceId }) => {
+const getDeviceByDeviceId = deviceId => {
+  const id = Object.keys(DEVICES).find(d => DEVICES[d].deviceId === deviceId)
+
+  if(id) {
+    return { id, ...DEVICES[id] }
+  }
+
+  return null
+}
+
+
+const createDevice = ({ id, name, roomId, type, element, deviceId, actuators = [], sensors = [] }) => {
   if (!id) {
     throw new Error('Device must have an id')
   }
@@ -68,7 +79,7 @@ const createDevice = ({ id, name, roomId, type, element, deviceId }) => {
     throw new Error('Device room not exists')
   }
 
-  DEVICES[id] = { name, type, roomId, element, deviceId }
+  DEVICES[id] = { name, type, roomId, element, deviceId, actuators, sensors }
 }
 
 const updateDevice = ({
@@ -142,29 +153,29 @@ const updateDevice = ({
 
 const deleteDevice = id => delete DEVICES[id]
 
-const getAunothorizedDevices = () => UNAUTHORIZED_DEVICES
+const getAunothorizedDeviceIds = () => Object.keys(UNAUTHORIZED_DEVICES)
 
-const addAunothorizedDevice = (id) => {
-  if(UNAUTHORIZED_DEVICES.indexOf(id) < 0) { 
-    UNAUTHORIZED_DEVICES.push(id) 
+const getAunothorizedDevice = (id) => UNAUTHORIZED_DEVICES[id]
+
+const addAunothorizedDevice = (device) => {
+  const {id, ...props} = device
+  if(!UNAUTHORIZED_DEVICES[id]) { 
+    UNAUTHORIZED_DEVICES[id] = props
   }
 }
 
-const deleteAunothorizedDevice = (id) => {
-  const index = UNAUTHORIZED_DEVICES.indexOf(id) 
+const deleteAunothorizedDevice = (id) => delete UNAUTHORIZED_DEVICES[id]
 
-  if(index >= 0) {
-    UNAUTHORIZED_DEVICES.splice(index,1)
-  }
-}
 
 module.exports = {
   getDevices,
   getDevice,
+  getDeviceByDeviceId,
   createDevice,
   updateDevice,
   deleteDevice,
-  getAunothorizedDevices,
+  getAunothorizedDeviceIds,
+  getAunothorizedDevice,
   addAunothorizedDevice,
   deleteAunothorizedDevice
 }

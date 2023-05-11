@@ -119,7 +119,7 @@ test('update - update routine props', async t => {
   })
 })
 
-test.only('remove - should remove routine by id', async t => {
+test('remove - should remove routine by id', async t => {
   const deviceId = new Id()
 
   const newRoutine = {
@@ -130,7 +130,7 @@ test.only('remove - should remove routine by id', async t => {
   const { insertedId } = await create(newRoutine)
 
   const r = await remove({ _id: insertedId })
-console.log(r)
+
   const result = await Routines.findOne({
     _id: insertedId
   })
