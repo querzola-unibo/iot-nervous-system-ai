@@ -7,19 +7,21 @@ const topic = `${MQTT_ROOT_TOPIC}/devices`
 
 module.exports = {
   connect: async (data) => {
-    const [device] = await get({deviceId: data.id})
+    const {id, ...deviceProps} = data
+    const [device] = await get({deviceId: id})
     if(device){
       const {_id, ...props} = device
-      createDevice({id: _id.toString(), ...props})
+      createDevice({id: _id.toString(), ...props, ...deviceProps})
     } else {
       await addAunothorizedDevice(data)
     }
   },
   create: async (data) => {
-    const {deviceId, ...props} = data
+    const { deviceId } = data
+
     const deviceProps = getAunothorizedDevice(deviceId)
     if (deviceProps) {
-      const newDevice = await create(props)
+      const newDevice = await create(data)
       deleteAunothorizedDevice(data.deviceId)
 
       if (newDevice?.insertedId) {

@@ -46,7 +46,7 @@ const getDeviceByDeviceId = deviceId => {
 }
 
 
-const createDevice = ({ id, name, roomId, type, element, deviceId, actuators = [], sensors = [] }) => {
+const createDevice = ({ id, name, roomId, type, element, deviceId, actuators = [], sensors = [], params = {} }) => {
   if (!id) {
     throw new Error('Device must have an id')
   }
@@ -79,7 +79,7 @@ const createDevice = ({ id, name, roomId, type, element, deviceId, actuators = [
     throw new Error('Device room not exists')
   }
 
-  DEVICES[id] = { name, type, roomId, element, deviceId, actuators, sensors }
+  DEVICES[id] = { name, type, roomId, element, deviceId, actuators, sensors, params }
 }
 
 const updateDevice = ({
