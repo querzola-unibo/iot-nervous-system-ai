@@ -3,6 +3,7 @@ const { MQTT_BROKER_URL, MQTT_ROOT_TOPIC, SUBSCRIBED_TOPICS } = require('./utils
 const routes = require('./routes')
 
 const { createIdFromObject } = require('./utils/ids')
+const { get: getRoutines} = require('./db/routines')
 const { getRooms, getDevices, initStatus, getAunothorizedDeviceIds } = require('./status')
 
 initStatus()
@@ -53,7 +54,8 @@ setInterval(async function () {
   const status = {
     rooms: getRooms(), 
     devices: getDevices(),
-    unauthorizedDevices: getAunothorizedDeviceIds()
+    unauthorizedDevices: getAunothorizedDeviceIds(),
+    routines: await getRoutines()
   }
 
   client.publish(`${MQTT_ROOT_TOPIC}/status`, JSON.stringify({

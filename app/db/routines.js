@@ -1,9 +1,9 @@
-const { collection } = require('.')
+const { collection, Id } = require('.')
 
 const Routines = collection('routines')
 
-const create = async ({ name, description, roomId }) => {
-  return Routines.insertOne({ name, description, roomId })
+const create = async ({ name, roomId, from, to, condition, value }) => {
+  return Routines.insertOne({ name, roomId, from, to, condition, value })
 }
 
 const update = async ({ _id, ...fieldsToUpdate }) => {
@@ -15,7 +15,7 @@ const update = async ({ _id, ...fieldsToUpdate }) => {
 }
 
 const remove = async ({ _id }) => {
-  return Routines.deleteOne({ _id })
+  return Routines.deleteOne({ _id: new Id(_id) })
 }
 
 const get = async ({ query } = {}) => {
