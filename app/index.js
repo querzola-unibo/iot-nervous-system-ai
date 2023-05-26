@@ -6,10 +6,11 @@ const { createIdFromObject } = require('./utils/ids')
 const { get: getRoutines} = require('./db/routines')
 const { getRooms, getDevices, initStatus, getAunothorizedDeviceIds } = require('./status')
 
+const { qLearning } = require('./qlearning')
+
 initStatus()
 
 const client = mqtt.connect(MQTT_BROKER_URL)
-
 
 client.on('connect', connack => {
   console.log('Succesfully connected to MQTT broker!')
@@ -19,6 +20,8 @@ client.on('connect', connack => {
       console.error(err)
     }
   }))
+
+  client.publish(`${MQTT_ROOT_TOPIC}/reconnect`)
 })
 
 client.on('message', async (topic, payload, packet) => {
@@ -63,3 +66,7 @@ setInterval(async function () {
     status
   }))
 }, 5000)
+
+setInterval(async function () {
+  qLearning(client)
+}, 20000)

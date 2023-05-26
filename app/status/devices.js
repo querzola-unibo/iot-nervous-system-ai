@@ -4,7 +4,7 @@ const { getRoom } = require('./rooms')
 const DEVICES = {}
 const UNAUTHORIZED_DEVICES = {}
 
-const getDevices = ({ ids = [], query, roomIds = [], type, element } = {}) => {
+const getDevices = ({ ids = [], query, type, element } = {}) => {
   return Object.keys(DEVICES)
     .filter(d => {
       if (ids.length && !ids.includes(d)) {
@@ -12,10 +12,6 @@ const getDevices = ({ ids = [], query, roomIds = [], type, element } = {}) => {
       }
 
       const device = DEVICES[d]
-
-      if (roomIds.length && !roomIds.includes(device.roomId)) {
-        return false
-      }
 
       if (query && !device.name.match(new RegExp(query, 'i'))) {
         return false

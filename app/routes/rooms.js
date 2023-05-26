@@ -15,9 +15,11 @@ module.exports = {
     }
   },
   update: async (data, client) => {
-    const room = await update(data)
-    if (room?.insertedId) {
-      updateRoom({ id: room.insertedId.toString(), ...data })
+    const result = await update(data)
+
+    if (result?.ok) {
+      const { _id, ...props } = data
+      updateRoom({ id: _id, ...props })
 
       const rooms = await get()
 

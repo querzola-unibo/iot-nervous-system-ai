@@ -19,8 +19,8 @@ const ELEMENTS = {
   weather: 'WEATHER'
 }
 
-const create = async ({ name, type, roomIds = [], element, deviceId }) => {
-  return Devices.insertOne({ name, type, roomIds, element, deviceId  })
+const create = async ({ name, type, element, deviceId }) => {
+  return Devices.insertOne({ name, type, element, deviceId  })
 }
 
 const update = async ({ _id, ...fieldsToUpdate }) => {
@@ -35,7 +35,7 @@ const remove = async ({ _id }) => {
   return Devices.deleteOne({ _id })
 }
 
-const get = async ({ _id, query, type, roomIds = [], deviceId } = {}) => {
+const get = async ({ _id, query, type, deviceId } = {}) => {
   const queryOnDevices = {}
   if (_id) {
     queryOnDevices._id = new Id(_id)
@@ -55,9 +55,6 @@ const get = async ({ _id, query, type, roomIds = [], deviceId } = {}) => {
     queryOnDevices.type = type
   }
 
-  if (roomIds.length) {
-    queryOnDevices.roomIds = { $in: roomIds }
-  }
   return Devices.find(queryOnDevices).toArray()
 }
 

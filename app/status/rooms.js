@@ -34,7 +34,7 @@ const getRooms = ({ ids = [], query, type, floor } = {}) => {
 
 const getRoom = id => ROOMS[id]
 
-const createRoom = ({ id, name, type, floor = 0, devices = [] }) => {
+const createRoom = ({ id, name, type, floor = 0, deviceIds = [] }) => {
   if (!id) {
     throw new Error('Room must have an id')
   }
@@ -55,7 +55,7 @@ const createRoom = ({ id, name, type, floor = 0, devices = [] }) => {
     throw new Error('Room type is invalid')
   }
 
-  ROOMS[id] = { name, type, floor, devices }
+  ROOMS[id] = { name, type, floor, deviceIds }
 }
 
 const updateRoom = ({
@@ -63,9 +63,8 @@ const updateRoom = ({
   name,
   type,
   floor,
-  params = {},
   stats = {},
-  devices = []
+  deviceIds = []
 } = {}) => {
   if (!id) {
     throw new Error('Room id is not provided')
@@ -93,13 +92,6 @@ const updateRoom = ({
     updatedRoom.floor = floor
   }
 
-  if (Object.keys(params)) {
-    updatedRoom.params = {
-      ...updatedRoom.params,
-      ...params
-    }
-  }
-
   if (Object.keys(stats)) {
     updatedRoom.stats = {
       ...updatedRoom.stats,
@@ -107,8 +99,8 @@ const updateRoom = ({
     }
   }
 
-  if (devices.length) {
-    updatedRoom.devices = devices
+  if (deviceIds.length) {
+    updatedRoom.deviceIds = deviceIds
   }
 
   ROOMS[id] = updatedRoom

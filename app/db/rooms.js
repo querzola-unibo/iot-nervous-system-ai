@@ -1,4 +1,4 @@
-const { collection } = require('.')
+const { collection, Id } = require('.')
 
 const Rooms = collection('rooms')
 
@@ -23,7 +23,7 @@ const create = async ({ name, type, deviceIds = [] }) => {
 
 const update = async ({ _id, ...fieldsToUpdate }) => {
   return Rooms.findOneAndUpdate(
-    { _id },
+    { _id: new Id(_id) },
     { $set: fieldsToUpdate },
     { returnDocument: 'after' }
   )

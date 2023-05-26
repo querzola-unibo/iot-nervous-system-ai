@@ -2,13 +2,13 @@ const { collection, Id } = require('.')
 
 const Routines = collection('routines')
 
-const create = async ({ name, roomId, from, to, condition, value }) => {
-  return Routines.insertOne({ name, roomId, from, to, condition, value })
+const create = async ({ name, roomId, conditions, description, achievements, weight }) => {
+  return Routines.insertOne({ name, roomId, conditions, description, achievements, weight })
 }
 
 const update = async ({ _id, ...fieldsToUpdate }) => {
   return Routines.findOneAndUpdate(
-    { _id },
+    { _id: new Id(_id) },
     { $set: fieldsToUpdate },
     { returnDocument: 'after' }
   )

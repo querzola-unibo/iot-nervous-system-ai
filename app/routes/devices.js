@@ -8,6 +8,7 @@ const topic = `${MQTT_ROOT_TOPIC}/devices`
 module.exports = {
   connect: async (data) => {
     const {id, ...deviceProps} = data
+
     const [device] = await get({deviceId: id})
     if(device){
       const {_id, ...props} = device
