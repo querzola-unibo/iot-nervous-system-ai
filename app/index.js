@@ -3,12 +3,12 @@ const { MQTT_BROKER_URL, MQTT_ROOT_TOPIC, SUBSCRIBED_TOPICS } = require('./utils
 const routes = require('./routes')
 
 const { createIdFromObject } = require('./utils/ids')
-const { get: getRoutines} = require('./db/routines')
-const { getRooms, getDevices, initStatus, getAunothorizedDeviceIds } = require('./status')
+const Routines = require('./db/routines')
+const Devices = require('./db/devices')
+const Rooms = require('./db/rooms')
+const { getAunothorizedDeviceIds } = require('./status')
 
 const { qLearning } = require('./qlearning')
-
-initStatus()
 
 const client = mqtt.connect(MQTT_BROKER_URL)
 
@@ -55,10 +55,10 @@ client.on('error', error => {
 
 setInterval(async function () {
   const status = {
-    rooms: getRooms(), 
-    devices: getDevices(),
+    rooms: await Rooms.get(), 
+    devices: await Devices.get(),
     unauthorizedDevices: getAunothorizedDeviceIds(),
-    routines: await getRoutines()
+    routines: await Routines.get()
   }
 
   client.publish(`${MQTT_ROOT_TOPIC}/status`, JSON.stringify({
@@ -67,6 +67,6 @@ setInterval(async function () {
   }))
 }, 5000)
 
-setInterval(async function () {
-  qLearning(client)
-}, 20000)
+// setInterval(async function () {
+//   qLearning(client)
+// }, 20000)

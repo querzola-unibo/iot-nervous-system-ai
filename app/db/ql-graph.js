@@ -1,7 +1,7 @@
 
 const { collection, Id } = require('.')
 const moment = require('moment')
-
+const { normalizeId } = require('./utils/ids')
 const QLGraph = collection('ql-graph')
 
 const getCurrentTime = () => {
@@ -26,11 +26,7 @@ const getMatchingStates = async (status) => {
 }
 
 const getState = async (_id) => {
-	let query = { _id }
-
-	if(typeof _id === 'string') {
-		query._id = new Id(_id) 
-	}
+	const query = { _id: normalizeId(_id) }
 
 	const states = await QLGraph.find(query).toArray()
 
@@ -46,11 +42,7 @@ const createState = async (status) => {
 }
 
 const updateState = async ({ _id, ...fieldsToUpdate }) => {
-	let query = { _id }
-
-	if(typeof _id === 'string') {
-		query._id = new Id(_id) 
-	}
+	const query = { _id: normalizeId(_id) }
 
   return QLGraph.findOneAndUpdate(
     query,
@@ -60,11 +52,8 @@ const updateState = async ({ _id, ...fieldsToUpdate }) => {
 }
 
 const removeState = async ({ _id }) => {
-	let query = { _id }
+	const query = { _id: normalizeId(_id) }
 
-	if(typeof _id === 'string') {
-		query._id = new Id(_id) 
-	}
 
   return QLGraph.deleteOne(query)
 }
