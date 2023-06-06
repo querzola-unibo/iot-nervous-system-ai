@@ -6,13 +6,13 @@ const { createIdFromObject } = require('./utils/ids')
 const Routines = require('./db/routines')
 const Devices = require('./db/devices')
 const Rooms = require('./db/rooms')
-const { getAunothorizedDeviceIds } = require('./status')
+const AunothorizedDevice = require('./utils/aunothorized-devices')
 
 const { qLearning } = require('./qlearning')
 
 const client = mqtt.connect(MQTT_BROKER_URL)
 
-client.on('connect', connack => {
+client.on('connect',async (connack) => {
   console.log('Succesfully connected to MQTT broker!')
   SUBSCRIBED_TOPICS.forEach((topic) => client.subscribe(`${MQTT_ROOT_TOPIC}/${topic}/#`, { qos: 0 }, (err, granted) => {
     if (err) {
@@ -21,6 +21,7 @@ client.on('connect', connack => {
     }
   }))
 
+  await Devices.disconnectAll()
   client.publish(`${MQTT_ROOT_TOPIC}/reconnect`)
 })
 
@@ -56,8 +57,8 @@ client.on('error', error => {
 setInterval(async function () {
   const status = {
     rooms: await Rooms.get(), 
-    devices: await Devices.get(),
-    unauthorizedDevices: getAunothorizedDeviceIds(),
+    devices: await Devices.get({ connected: true }),
+    unauthorizedDevices: AunothorizedDevice.getIds(),
     routines: await Routines.get()
   }
 

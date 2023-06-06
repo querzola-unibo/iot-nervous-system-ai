@@ -68,6 +68,8 @@ const getStateFromStatus = (status) => {
 }
 
 const mapActions = (status) => {
+	const actions = [{ topic: null, qValue: 0 }]
+
 	return status.devices.reduce((acc, curr) => {
 		curr.actuators.forEach(({ key, type, ...actuator}) => {
 			if(type === 'range') {
@@ -83,7 +85,7 @@ const mapActions = (status) => {
 			}
 		});
 		return acc
-	}, [])
+	}, actions)
 }
 
 const mapRooms = (status) => {

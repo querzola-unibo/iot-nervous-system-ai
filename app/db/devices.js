@@ -148,16 +148,11 @@ const get = async ({ _id, query, type, deviceId, connected } = {}) => {
   return Devices.find(queryOnDevices).toArray()
 }
 
-const disconnectAll = async ({ _id, }) => {
-  if (!_id) {
-    throw new Error('Device id is not provided')
-  }
-
-  const query = { _id: normalizeId(_id) }
+const disconnectAll = async () => {
   const fieldsToUpdate = { connected: false }
 
   return Devices.findOneAndUpdate(
-    query,
+    {},
     { $set: fieldsToUpdate }
   )
 }

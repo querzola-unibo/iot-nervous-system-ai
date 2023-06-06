@@ -1,6 +1,7 @@
 const { getMatchingStates, createState, getState, updateQValue } = require('../db/ql-graph')
-const { getRooms, getDevices } = require('../status')
-const { get: getRoutines} = require('../db/routines')
+const Devices = require('../db/devices')
+const Rooms = require('../db/rooms')
+const Routines = require('../db/routines')
 
 const { MQTT_ROOT_TOPIC } = require('../utils/costants')
 const { epsilon, gamma, alpha } = require('./utils/costants')
@@ -80,16 +81,16 @@ const calculateRoutineReward = (rules, stateTime, room, devices) => {
 }
 
 const calculateReward = async (currentState, status) => {
-	const routines = await getRoutines()
+	const routines = await Routines.get()
 
 	let reward = 0
 
 	routines.forEach(routine => {	
 		const {roomId, conditions, achievements, weight} = routine
-
+		
 		const room = currentState.rooms.find(r => r._id.toString() === roomId)
-		const deviceIds = status.rooms.find(r => r.id === roomId).deviceIds
-		const devices = status.devices.filter(d => deviceIds.includes(d.id))
+		const deviceIds = status.rooms.find(r => r._id === roomId).deviceIds
+		const devices = status.devices.filter(d => deviceIds.includes(d._id))
 
 		if((calculateRoutineReward(conditions, currentState.time, room, devices) / conditions.length) === 1) {
 			const routineReward = calculateRoutineReward(achievements, currentState.time, room, devices)
@@ -114,8 +115,8 @@ const calculateMaxQ = ({ actions }) => {
 
 const updateQLGraph = async ({ qValue, stateId, topic }) => {
 	const status = {
-		rooms: getRooms(), 
-		devices: getDevices(),
+		rooms: await Rooms.get(), 
+		devices: await Devices.get(),
 	}
 
 	const currentState = await getCurrentState(status)
@@ -130,8 +131,8 @@ const updateQLGraph = async ({ qValue, stateId, topic }) => {
 
 const qLearning = async (client) => {
 	const status = {
-		rooms: getRooms(), 
-    devices: getDevices(),
+		rooms: await Rooms.get(), 
+    devices: await Devices.get(),
 	}
 
 	if(!status.devices.length) {
@@ -141,7 +142,10 @@ const qLearning = async (client) => {
 	const currentState = await getCurrentState(status)
 	const { qValue, topic } = calculateAction(currentState)
 	console.log(`${MQTT_ROOT_TOPIC}/${topic}`)
-	client.publish(`${MQTT_ROOT_TOPIC}/${topic}`, JSON.stringify({}))
+
+	if(topic){
+		client.publish(`${MQTT_ROOT_TOPIC}/${topic}`, JSON.stringify({}))
+	}
 
 	setTimeout(updateQLGraph, 10000, { qValue, stateId: currentState._id, topic })
 }
