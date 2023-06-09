@@ -26,7 +26,7 @@ const create = async ({ name, type, deviceIds = [], floor = 0, }) => {
     throw new Error('Room must have a type')
   }
 
-  if (!Object.keys(rooms.ROOM_TYPES).includes(type)) {
+  if (!Object.keys(ROOM_TYPES).includes(type)) {
     throw new Error('Room type is invalid')
   }
 

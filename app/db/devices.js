@@ -151,7 +151,7 @@ const get = async ({ _id, query, type, deviceId, connected } = {}) => {
 const disconnectAll = async () => {
   const fieldsToUpdate = { connected: false }
 
-  return Devices.findOneAndUpdate(
+  return Devices.updateMany(
     {},
     { $set: fieldsToUpdate }
   )

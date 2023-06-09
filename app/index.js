@@ -23,6 +23,18 @@ client.on('connect',async (connack) => {
 
   await Devices.disconnectAll()
   client.publish(`${MQTT_ROOT_TOPIC}/reconnect`)
+
+  const rooms = await Rooms.get()
+  client.publish(`${MQTT_ROOT_TOPIC}/rooms`, JSON.stringify(rooms), { retain: true })
+
+  const devices = await Devices.get({ connected: true })
+  client.publish(`${MQTT_ROOT_TOPIC}/devices`, JSON.stringify(devices), { retain: true })
+
+  const unauthorizedDevices = AunothorizedDevice.getIds()
+  client.publish(`${MQTT_ROOT_TOPIC}/unauthorizedDevices`, JSON.stringify(unauthorizedDevices), { retain: true })
+
+  const routines = await Routines.get()
+  client.publish(`${MQTT_ROOT_TOPIC}/routines`, JSON.stringify(routines), { retain: true })
 })
 
 client.on('message', async (topic, payload, packet) => {
@@ -53,20 +65,6 @@ client.on('message', async (topic, payload, packet) => {
 client.on('error', error => {
   console.error({ error })
 })
-
-setInterval(async function () {
-  const status = {
-    rooms: await Rooms.get(), 
-    devices: await Devices.get({ connected: true }),
-    unauthorizedDevices: AunothorizedDevice.getIds(),
-    routines: await Routines.get()
-  }
-
-  client.publish(`${MQTT_ROOT_TOPIC}/status`, JSON.stringify({
-    _id: createIdFromObject(status), 
-    status
-  }))
-}, 5000)
 
 // setInterval(async function () {
 //   qLearning(client)
