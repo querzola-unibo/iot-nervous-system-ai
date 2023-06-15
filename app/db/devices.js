@@ -15,7 +15,7 @@ const ELEMENTS = {
   water: 'WATER',
   temperature: 'TEMPERATURE',
   sound: 'SOUND',
-  energy: 'ENERGY',
+  electricity: 'ELECTRICITY',
   internet: 'INTERNET',
   light: 'LIGHT',
   airPollution: 'AIR POLLUTION',

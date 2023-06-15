@@ -7,7 +7,7 @@ const QLGraph = collection('ql-graph')
 const getCurrentTime = () => {
 	const date = moment(Date.now())
 
-	return date.hour()
+	return Math.floor(date.hour() / 6)
 }
 
 const getMatchingStates = async (status) => {
@@ -122,8 +122,6 @@ const updateQValue = async ({ stateId, topic, newQValue }) => {
 		} 
 		return { ...a, qValue: newQValue}
 	})
-
-	console.log(newQValue, updatedActions)
 
 	await updateState({_id: stateId, actions: updatedActions })
 

@@ -4,8 +4,8 @@ const Rooms = require('../db/rooms')
 const Routines = require('../db/routines')
 
 const { MQTT_ROOT_TOPIC } = require('../utils/costants')
-const { epsilon, gamma, alpha } = require('./utils/costants')
-const { getRangeReward, getTimeRangeReward, getBooleanReward } = require('./utils/rewards')
+const { epsilon, gamma, alpha, lambda } = require('./utils/costants')
+const { getRangeReward, getBooleanReward, isRangeSatisfied, isBooleanSatisfied, isTimeRangeSatisfied } = require('./utils/rewards')
 
 const getCurrentState = async (status) => {
 	const states = await getMatchingStates(status)
@@ -57,12 +57,31 @@ const calculateAction = (currentState) => {
 	}
 }
 
-const calculateRoutineReward = (rules, stateTime, room, devices) => {
-	let reward = 0
-	rules.forEach((({ param, type, ruleProps }) => {
+const isRoutineActive = (rules, stateTime, room, devices) => {
+	return !rules.some((({ param, type, ruleProps }) => {
 		if (type === 'timeRange') {
-			reward += getTimeRangeReward(ruleProps, stateTime)
+			return !isTimeRangeSatisfied(ruleProps, stateTime)
 		} else if (type === 'boolean'){
+			return !isBooleanSatisfied(ruleProps, room[param])
+		} else if (type === 'range') {
+			const rangeProps = devices.reduce((acc, curr) => {
+				const matchingParam = [...curr.sensors, ...curr.actuators].find(s => s.key === param)
+				if(matchingParam) {
+					return matchingParam
+				}
+
+				return acc
+			}, {})
+			return !isRangeSatisfied(ruleProps, rangeProps, room[param])
+		}
+	}))
+}
+
+const calculateRoutineReward = (rules, room, devices) => {
+	let reward = 0
+
+	rules.forEach((({ param, type, ruleProps }) => {
+		if (type === 'boolean'){
 			reward += getBooleanReward(ruleProps, room[param])
 		} else if (type === 'range') {
 			const rangeProps = devices.reduce((acc, curr) => {
@@ -74,10 +93,26 @@ const calculateRoutineReward = (rules, stateTime, room, devices) => {
 				return acc
 			}, {})
 			reward += getRangeReward(ruleProps, rangeProps, room[param])
-		}
+		}		
 	}))
 
+	reward /= rules.length
+
 	return reward
+}
+
+const calculateEnergyReward = (status) => {
+	let energyConsumes = 0
+
+	status.devices.forEach(d => {
+		d.actuators.forEach(a => {
+			if(a.kWh && d.params[a.key] === true){
+				energyConsumes += a.kWh
+			}
+		})
+	})
+
+	return -(((energyConsumes / 10) * 2) - 1)
 }
 
 const calculateReward = async (currentState, status) => {
@@ -85,32 +120,50 @@ const calculateReward = async (currentState, status) => {
 
 	let reward = 0
 
-	routines.forEach(routine => {	
-		const {roomId, conditions, achievements, weight} = routine
+	const activeRoutines = routines.filter(({ roomId, conditions }) => {		
+		const room = currentState.rooms.find(r => r._id.toString() === roomId)
+		const deviceIds = status.rooms.find(r => r._id.toString() === roomId).deviceIds
+		const devices = status.devices.filter(d => deviceIds.includes(d._id))
+
+		if(isRoutineActive(conditions, currentState.time, room, devices)) {
+			return true
+		}
+
+		return false
+	})
+
+	activeRoutines.forEach(routine => {	
+		const { roomId, achievements, weight } = routine
 		
 		const room = currentState.rooms.find(r => r._id.toString() === roomId)
 		const deviceIds = status.rooms.find(r => r._id === roomId).deviceIds
 		const devices = status.devices.filter(d => deviceIds.includes(d._id))
 
-		if((calculateRoutineReward(conditions, currentState.time, room, devices) / conditions.length) === 1) {
-			const routineReward = calculateRoutineReward(achievements, currentState.time, room, devices)
-			reward += routineReward * (weight / 10)
-		}
+		
+		const routineReward = calculateRoutineReward(achievements, room, devices)
+		reward += routineReward * (weight / 10)
 	})
+
+	reward = reward / (activeRoutines?.length || 1)
+
+	const energyReward = calculateEnergyReward(status)
+
+	reward = lambda * reward + ((1 - lambda) * energyReward)
 
 	return reward
 }
 
 const calculateMaxQ = ({ actions }) => {
-	let maxQ = null
-
-		actions.forEach(action => {
-			if (action.qValue > maxQ) {
-				maxQ = action.qValue
-			}
-		})
+	let maxQ = 0
+	actions.forEach((action, index) => {
+		if(!index) {
+			maxQ = action.qValue
+		} else if (action.qValue > maxQ) {
+			maxQ = action.qValue
+		}
+	})
 		
-		return maxQ
+	return maxQ
 }
 
 const updateQLGraph = async ({ qValue, stateId, topic }) => {
@@ -141,7 +194,6 @@ const qLearning = async (client) => {
 
 	const currentState = await getCurrentState(status)
 	const { qValue, topic } = calculateAction(currentState)
-	console.log(`${MQTT_ROOT_TOPIC}/${topic}`)
 
 	if(topic){
 		client.publish(`${MQTT_ROOT_TOPIC}/${topic}`, JSON.stringify({}))

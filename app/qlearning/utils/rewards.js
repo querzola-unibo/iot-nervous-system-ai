@@ -36,26 +36,6 @@ const getRangeReward = (condition, rangeProps, value) => {
 	}
 }
 
-const getTimeRangeReward = (condition, value) => {
-  const [lowerBound, upperBound] = condition.values
-
-	if(value >= lowerBound && value < upperBound) {
-		return 1
-	} else {
-		let distanceFromRange
-
-		if(value < lowerBound) {
-			distanceFromRange = Math.abs(value - lowerBound)
-		} else {
-			distanceFromRange = Math.abs(value - upperBound)
-		}
-
-		const maxDistance = Math.max(Math.abs(lowerBound - 0), Math.abs(upperBound - 23))
-
-		return (((distanceFromRange/maxDistance)/2) - 1) *(-1)
-	}
-}
-
 const getBooleanReward = (condition, value) => {
   if (value === condition.value) {
 		return 1
@@ -63,8 +43,38 @@ const getBooleanReward = (condition, value) => {
 	return -1
 }
 
+const isRangeSatisfied = (condition, rangeProps, value) => {
+	const [lowerBound, upperBound] =  getRangeBoundaries({...rangeProps, ...condition})
+  const { min, max } = rangeProps
+
+	if(value >= lowerBound && value < upperBound) {
+		return true
+	} else {
+		return false
+	}
+}
+
+const isTimeRangeSatisfied = (condition, value) => {
+  const [lowerBound, upperBound] = condition.values
+
+	if(value >= lowerBound && value < upperBound) {
+		return true
+	} else {
+		return false
+	}
+}
+
+const isBooleanSatisfied = (condition, value) => {
+  if (value === condition.value) {
+		return true
+	}
+	return false
+}
+
 module.exports = {
 	getRangeReward,
-	getTimeRangeReward,
-	getBooleanReward
+	isRangeSatisfied,
+	isTimeRangeSatisfied,
+	getBooleanReward,
+	isBooleanSatisfied
 }
