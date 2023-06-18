@@ -90,8 +90,8 @@ const mapActions = (status) => {
 
 const mapRooms = (status) => {
 	return status.rooms.map(({ _id, deviceIds }) => {
-		const devices = status.devices.filter(d => deviceIds.includes(d.id))
-		const room = { _id }
+		const devices = status.devices.filter(d => deviceIds.includes(d._id.toString()))
+		const room = { _id: _id.toString() }
 
 		return devices.reduce((acc, curr) => {
 			const keys = Object.keys(curr.params)

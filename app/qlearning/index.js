@@ -2,6 +2,7 @@ const { getMatchingStates, createState, getState, updateQValue } = require('../d
 const Devices = require('../db/devices')
 const Rooms = require('../db/rooms')
 const Routines = require('../db/routines')
+const { createActivity } = require('../db/ql-timeline')
 
 const { MQTT_ROOT_TOPIC } = require('../utils/costants')
 const { epsilon, gamma, alpha, lambda } = require('./utils/costants')
@@ -118,7 +119,7 @@ const calculateEnergyReward = (status) => {
 const calculateReward = async (currentState, status) => {
 	const routines = await Routines.get()
 
-	let reward = 0
+	let routinesReward = 0
 
 	const activeRoutines = routines.filter(({ roomId, conditions }) => {		
 		const room = currentState.rooms.find(r => r._id.toString() === roomId)
@@ -136,21 +137,22 @@ const calculateReward = async (currentState, status) => {
 		const { roomId, achievements, weight } = routine
 		
 		const room = currentState.rooms.find(r => r._id.toString() === roomId)
-		const deviceIds = status.rooms.find(r => r._id === roomId).deviceIds
-		const devices = status.devices.filter(d => deviceIds.includes(d._id))
+		const deviceIds = status.rooms.find(r => r._id.toString() === roomId).deviceIds
+		const devices = status.devices.filter(d => deviceIds.includes(d._id.toString()))
 
 		
-		const routineReward = calculateRoutineReward(achievements, room, devices)
-		reward += routineReward * (weight / 10)
+		routinesReward = calculateRoutineReward(achievements, room, devices)
+		console.log({name: routine.name, routinesReward})
+		routinesReward += routinesReward * (weight / 10)
 	})
 
-	reward = reward / (activeRoutines?.length || 1)
+	routinesReward = routinesReward / (activeRoutines?.length || 1)
 
 	const energyReward = calculateEnergyReward(status)
 
-	reward = lambda * reward + ((1 - lambda) * energyReward)
+	const reward = lambda * routinesReward + ((1 - lambda) * energyReward)
 
-	return reward
+	return { reward, routinesReward, energyReward }
 }
 
 const calculateMaxQ = ({ actions }) => {
@@ -173,12 +175,28 @@ const updateQLGraph = async ({ qValue, stateId, topic }) => {
 	}
 
 	const currentState = await getCurrentState(status)
-	const reward = await calculateReward(currentState, status)
+	const { reward, routinesReward, energyReward } = await calculateReward(currentState, status)
 	const maxQ = calculateMaxQ(currentState)
 
 	const tdError = reward + (gamma * maxQ) + qValue
 	const newQValue = qValue + (alpha * tdError)
 
+	await createActivity({
+		initialState: stateId,
+		finalState: currentState._id,
+		action: topic,
+		initialQValue: qValue,
+		finalQValue: newQValue,
+  	energyReward,
+  	routinesReward,
+		maxQ,
+  	finalReward: reward,
+  	lambda,
+  	epsilon,
+		gamma,
+		alpha
+	})
+	
 	await updateQValue({ stateId, topic, newQValue })
 }
 
@@ -199,7 +217,7 @@ const qLearning = async (client) => {
 		client.publish(`${MQTT_ROOT_TOPIC}/${topic}`, JSON.stringify({}))
 	}
 
-	setTimeout(updateQLGraph, 10000, { qValue, stateId: currentState._id, topic })
+	setTimeout(updateQLGraph, 15000, { qValue, stateId: currentState._id, topic })
 }
 
 module.exports = {

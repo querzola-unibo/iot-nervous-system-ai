@@ -40,7 +40,6 @@ module.exports = {
   },
   updateParams: async (data, client) => {
     const { deviceId, params } = data
-
     const [device] = await get({ deviceId })
 
     if(device) {

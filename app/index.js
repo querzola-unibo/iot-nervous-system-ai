@@ -68,4 +68,4 @@ client.on('error', error => {
 
 setInterval(async function () {
   qLearning(client)
-}, 20000)
+}, 25000)
