@@ -25,22 +25,35 @@ const getCurrentState = async (status) => {
 	return states[0]
 }
 
-const calculateAction = (currentState) => {
+const calculateAction = (currentState, devices) => {
 	const actions = currentState.actions
-	
+
 	if (!actions.length){
-		return null
+		return {}
+	}
+
+	const unavailableActions = devices.reduce((acc,curr) => {
+		curr.actuators.forEach(({key}) => {
+			acc.push(`${curr.deviceId}/${key}/${curr.params[key]}`)
+		})
+		return acc
+	}, [])
+
+	const availableActions = actions.filter(a => !unavailableActions.includes(a.topic))
+	console.log(availableActions)
+	if (!availableActions.length){
+		return {}
 	}
 
 	const randomicThreshold = epsilon * 100
-	const random = Math.floor((Math.random() * randomicThreshold))
+	const random = Math.floor((Math.random() * 100))
 
 	if (random > randomicThreshold){
 		let bestActions = []
 		let maxQValue = null
 
-		actions.forEach(action => {
-			if (!maxQValue || action.qValue > maxQValue) {
+		availableActions.forEach(action => {
+			if (typeof maxQValue === null || action.qValue > maxQValue) {
 				bestActions = [action]
 				maxQValue = action.qValue
 			} else if (action.qValue === maxQValue) {
@@ -49,12 +62,15 @@ const calculateAction = (currentState) => {
 			}
 		})
 
-		
+		if(bestActions.length === 1) {
+			return {action: bestActions[0], isRandomAction: false}
+		}
+		const randomIndex = Math.floor((Math.random() * bestActions.length))
+		return {action: bestActions[randomIndex], isRandomAction: false}
 
-		return bestActions[0]
 	} else {
-		const randomIndex = Math.floor((Math.random() * actions.length))
-		return actions[randomIndex]
+		const randomIndex = Math.floor((Math.random() * availableActions.length))
+		return {action: availableActions[randomIndex], isRandomAction: true}
 	}
 }
 
@@ -102,21 +118,7 @@ const calculateRoutineReward = (rules, room, devices) => {
 	return reward
 }
 
-const calculateEnergyReward = (status) => {
-	let energyConsumes = 0
-
-	status.devices.forEach(d => {
-		d.actuators.forEach(a => {
-			if(a.kWh && d.params[a.key] === true){
-				energyConsumes += a.kWh
-			}
-		})
-	})
-
-	return -(((energyConsumes / 10) * 2) - 1)
-}
-
-const calculateReward = async (currentState, status) => {
+const calculateRoutinesReward = async (currentState, status) => {
 	const routines = await Routines.get()
 
 	let routinesReward = 0
@@ -142,11 +144,28 @@ const calculateReward = async (currentState, status) => {
 
 		
 		routinesReward = calculateRoutineReward(achievements, room, devices)
-		console.log({name: routine.name, routinesReward})
 		routinesReward += routinesReward * (weight / 10)
 	})
 
-	routinesReward = routinesReward / (activeRoutines?.length || 1)
+	return routinesReward / (activeRoutines?.length || 1)
+}
+
+const calculateEnergyReward = (status) => {
+	let energyConsumes = 0
+
+	status.devices.forEach(d => {
+		d.actuators.forEach(a => {
+			if(a.kWh && d.params[a.key] === true){
+				energyConsumes += a.kWh
+			}
+		})
+	})
+
+	return -(((energyConsumes / 10) * 2) - 1)
+}
+
+const calculateReward = async (currentState, status) => {
+	const routinesReward = await calculateRoutinesReward(currentState, status)
 
 	const energyReward = calculateEnergyReward(status)
 
@@ -168,7 +187,7 @@ const calculateMaxQ = ({ actions }) => {
 	return maxQ
 }
 
-const updateQLGraph = async ({ qValue, stateId, topic }) => {
+const updateQLGraph = async ({ qValue, stateId, topic, isRandomAction }) => {
 	const status = {
 		rooms: await Rooms.get(), 
 		devices: await Devices.get(),
@@ -185,12 +204,13 @@ const updateQLGraph = async ({ qValue, stateId, topic }) => {
 		initialState: stateId,
 		finalState: currentState._id,
 		action: topic,
-		initialQValue: qValue,
-		finalQValue: newQValue,
+		isRandomAction,
   	energyReward,
   	routinesReward,
 		maxQ,
   	finalReward: reward,
+		initialQValue: qValue,
+		finalQValue: newQValue,
   	lambda,
   	epsilon,
 		gamma,
@@ -211,13 +231,17 @@ const qLearning = async (client) => {
 	}
 
 	const currentState = await getCurrentState(status)
-	const { qValue, topic } = calculateAction(currentState)
+	const { action, isRandomAction } = calculateAction(currentState, status.devices)
+	if(!action) {
+		return
+	}
+	const { qValue, topic } = action
 
 	if(topic){
 		client.publish(`${MQTT_ROOT_TOPIC}/${topic}`, JSON.stringify({}))
 	}
 
-	setTimeout(updateQLGraph, 15000, { qValue, stateId: currentState._id, topic })
+	setTimeout(updateQLGraph, 15000, { qValue, stateId: currentState._id, topic, isRandomAction })
 }
 
 module.exports = {
