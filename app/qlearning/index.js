@@ -50,10 +50,10 @@ const calculateAction = (currentState, devices) => {
 
 	if (random > randomicThreshold){
 		let bestActions = []
-		let maxQValue = null
+		let maxQValue
 
 		availableActions.forEach(action => {
-			if (typeof maxQValue === null || action.qValue > maxQValue) {
+			if (typeof maxQValue === "undefined" || action.qValue > maxQValue) {
 				bestActions = [action]
 				maxQValue = action.qValue
 			} else if (action.qValue === maxQValue) {
@@ -65,6 +65,7 @@ const calculateAction = (currentState, devices) => {
 		if(bestActions.length === 1) {
 			return {action: bestActions[0], isRandomAction: false}
 		}
+
 		const randomIndex = Math.floor((Math.random() * bestActions.length))
 		return {action: bestActions[randomIndex], isRandomAction: false}
 
@@ -193,6 +194,16 @@ const updateQLGraph = async ({ qValue, stateId, topic, isRandomAction }) => {
 		devices: await Devices.get(),
 	}
 
+	if(topic) {
+		const [deviceId, action, value] = topic.split('/')
+		const device = status.devices.find(d => d.deviceId === deviceId)
+
+		if(device.params[action].toString() !== value) {
+			console.error(`ERROR: Action ${topic} failed`)
+			return
+		}
+	}
+
 	const currentState = await getCurrentState(status)
 	const { reward, routinesReward, energyReward } = await calculateReward(currentState, status)
 	const maxQ = calculateMaxQ(currentState)
@@ -226,15 +237,18 @@ const qLearning = async (client) => {
     devices: await Devices.get(),
 	}
 
-	if(!status.devices.length) {
+	if(status.devices.length < 2) {
+		console.error(`Missing ${2 - status.devices.length} devices`)
 		return
 	}
 
 	const currentState = await getCurrentState(status)
 	const { action, isRandomAction } = calculateAction(currentState, status.devices)
+
 	if(!action) {
 		return
 	}
+
 	const { qValue, topic } = action
 
 	if(topic){
