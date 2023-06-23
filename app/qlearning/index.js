@@ -19,7 +19,7 @@ const getCurrentState = async (status) => {
 
 	//handle
 	if(states.length > 1) {
-		console.log(`Found ${states.length} states for status: \n${JSON.stringify(status, null, 2)}`)
+		console.error(`Found ${states.length} states for status: \n${JSON.stringify(status, null, 2)}`)
 	}
 
 	return states[0]
@@ -208,7 +208,7 @@ const updateQLGraph = async ({ qValue, stateId, topic, isRandomAction }) => {
 	const { reward, routinesReward, energyReward } = await calculateReward(currentState, status)
 	const maxQ = calculateMaxQ(currentState)
 
-	const tdError = reward + (gamma * maxQ) + qValue
+	const tdError = reward + (gamma * maxQ) - qValue
 	const newQValue = qValue + (alpha * tdError)
 
 	await createActivity({

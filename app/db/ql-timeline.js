@@ -1,7 +1,7 @@
 
 const { collection, Id } = require('.')
 const { normalizeId } = require('./utils/ids')
-const QLTimeline = collection('ql-timeline-test-lambda-25')
+const QLTimeline = collection('ql-timeline-test2-lambda-25')
 
 const getMatchingActivitys = async (status) => {
 	const query = {

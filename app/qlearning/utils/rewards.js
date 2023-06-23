@@ -32,7 +32,7 @@ const getRangeReward = (condition, rangeProps, value) => {
 
 		const maxDistance = Math.max(Math.abs(lowerBound - min), Math.abs(upperBound - max))
 
-		return (((distanceFromRange/maxDistance)/2) - 1) *(-1)
+		return (((distanceFromRange/maxDistance)/2) - 1) * (-1)
 	}
 }
 
