@@ -2,7 +2,7 @@
 const { collection, Id } = require('.')
 const moment = require('moment')
 const { normalizeId } = require('./utils/ids')
-const QLGraph = collection('ql-graph-test2-lambda-25')
+const QLGraph = collection('ql-graph-test3-lambda-25')
 
 const getCurrentTime = () => {
 	const date = moment(Date.now())

@@ -144,8 +144,9 @@ const calculateRoutinesReward = async (currentState, status) => {
 		const devices = status.devices.filter(d => deviceIds.includes(d._id.toString()))
 
 		
-		routinesReward = calculateRoutineReward(achievements, room, devices)
-		routinesReward += routinesReward * (weight / 10)
+		const routineReward = calculateRoutineReward(achievements, room, devices)
+		routinesReward += routineReward * (weight / 10)
+		console.log({ routine: routine.name, routineReward, weightedReward: routineReward * (weight / 10) })
 	})
 
 	return routinesReward / (activeRoutines?.length || 1)
@@ -162,7 +163,7 @@ const calculateEnergyReward = (status) => {
 		})
 	})
 
-	return -(((energyConsumes / 10) * 2) - 1)
+	return (((energyConsumes / 10) * 2) - 1) * (-1)
 }
 
 const calculateReward = async (currentState, status) => {
@@ -218,8 +219,8 @@ const updateQLGraph = async ({ qValue, stateId, topic, isRandomAction }) => {
 		isRandomAction,
   	energyReward,
   	routinesReward,
-		maxQ,
   	finalReward: reward,
+		maxQ,
 		initialQValue: qValue,
 		finalQValue: newQValue,
   	lambda,
