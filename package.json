@@ -4,6 +4,7 @@
   "description": "Node of the Iot Nervous System which implement a Q Learning algorithm to learn and take decision for the environment",
   "main": "app/index.js",
   "scripts": {
+    "start": "node app/index.js",
     "test": "ENV=test ava -s",
     "test:ci": "ENV=test c8 ava -s -v",
     "dev": "nodemon --watch app --watch db --delay 2.5 -e js,graphql --ignore '**.test.js' app/index"
@@ -14,8 +15,7 @@
   },
   "keywords": [
     "AI",
-    "Q",
-    "Learning",
+    "QLearning",
     "MQTT"
   ],
   "author": "Emanuele Querzola",

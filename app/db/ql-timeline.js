@@ -1,9 +1,9 @@
 
 const { collection, Id } = require('.')
 const { normalizeId } = require('./utils/ids')
-const QLTimeline = collection('ql-timeline-test3-lambda-25')
+const QLTimeline = collection('ql-timeline-test-lambda-75')
 
-const getMatchingActivitys = async (status) => {
+const getMatchingActivities = async (status) => {
 	const query = {
 		time: getCurrentTime()
 	}
@@ -24,6 +24,15 @@ const getActivity = async (_id) => {
 	const states = await QLTimeline.find(query).toArray()
 
 	return states[0]
+}
+
+const getActivities = async (query, limit = 100, offset = 0) => {
+	return QLTimeline
+		.find(query)
+		.sort({"createdAt": 1})
+		.skip(offset)
+		.limit(limit)
+		.toArray()
 }
 
 const createActivity = async (activity) => {
@@ -50,9 +59,12 @@ const removeActivity = async ({ _id }) => {
   return QLTimeline.deleteOne(query)
 }
 
+
+
 module.exports = {
-	getMatchingActivitys, 
+	getMatchingActivities, 
 	createActivity,
+	getActivities,
 	getActivity,
   updateActivity,
   removeActivity
